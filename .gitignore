@@ -2,8 +2,10 @@
 *.iml
 *.ipr
 *.iws
-.idea/
+
+.idea
 classes
+out/
 .classpath
 .project
 .DS_Store
