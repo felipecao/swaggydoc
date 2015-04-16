@@ -43,7 +43,7 @@ class SwaggyDataServiceSpec extends Specification {
         def m = service.getConstraintsInformation(domain, propertyName)
 
         then:
-        [nullable: false] == m
+        [constraints:[[constraint: "nullable", value: false]]] == m
     }
 
     def "getConstraintsInformation returns nullable: true for Marshalled#prefix"(){
@@ -55,10 +55,10 @@ class SwaggyDataServiceSpec extends Specification {
         def m = service.getConstraintsInformation(domain, propertyName)
 
         then:
-        [nullable: true] == m
+        [constraints:[[constraint: "nullable", value: true]]] == m
     }
 
-    def "getConstraintsInformation returns an empty map for Subdomain#name"(){
+    def "getConstraintsInformation returns an empty collection for Subdomain#name"(){
         given:
         def domain = new Subdomain()
         def propertyName = "name"
@@ -67,6 +67,6 @@ class SwaggyDataServiceSpec extends Specification {
         def m = service.getConstraintsInformation(domain, propertyName)
 
         then:
-        [:] == m
+        [constraints:[]] == m
     }
 }

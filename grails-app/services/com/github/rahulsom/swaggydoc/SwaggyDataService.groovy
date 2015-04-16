@@ -15,6 +15,7 @@ import java.beans.Introspector
 import java.lang.reflect.AccessibleObject
 import java.lang.reflect.Method
 
+import static org.apache.commons.lang.StringUtils.isBlank
 import static org.springframework.http.HttpStatus.*
 
 class SwaggyDataService {
@@ -612,14 +613,18 @@ class SwaggyDataService {
     }
 
     private static Map getConstraintsInformation(def domain, String propertyName){
-        Map constraintsInfo = [:]
+        if(!domain || isBlank(propertyName)){
+            return [:]
+        }
+
+        Map constraintsInfo = [constraints:[]]
         def constraintName
 
         if(domain && domain.constraints && domain.constraints[propertyName]
                 && (domain.constraints[propertyName] instanceof ConstrainedProperty)){
             domain.constraints[propertyName].appliedConstraints.each { constraint ->
                 constraintName = Introspector.decapitalize(constraint.class.simpleName - "Constraint")
-                constraintsInfo << [("$constraintName".toString()): constraint.constraintParameter]
+                constraintsInfo.constraints << [constraint: "$constraintName", value: constraint.constraintParameter]
             }
         }
 
