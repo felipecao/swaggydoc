@@ -30,7 +30,7 @@ class SwaggyDataService {
     static final List<String> DefaultRequestContentTypes = [
             'application/json', 'application/xml', 'application/x-www-form-urlencoded'
     ]
-    static final List knownTypes = [int, Integer, long, Long, float, Float, double, Double, String]
+    static final List knownTypes = [int, Integer, long, Long, float, Float, double, Double, String, boolean, Boolean]
 
     @Newify([Parameter, ResponseMessage, DefaultAction])
     public static final Map<String, Closure<DefaultAction>> DefaultActionComponents = [
@@ -390,6 +390,11 @@ class SwaggyDataService {
         def models = [:]
         while (m.size()) {
             Class model = m.poll()
+
+            if(model && model in knownTypes){
+                break
+            }
+
             log.debug "Getting model for class ${model}"
             def domainClass = grailsApplication.domainClasses.find { it.clazz == model } as GrailsDomainClass
             /** Duck typing here:
@@ -442,21 +447,26 @@ class SwaggyDataService {
                     if (f.type.isAssignableFrom(List) || f.type.isAssignableFrom(Set)) {
                         if (f instanceof GrailsDomainClassProperty) {
                             def genericType = domainClass?.associationMap?.getAt(f.name)
-                            if (genericType) {
+                            if (genericType && !m.contains(genericType)) {
                                 m.add(genericType)
                             } else {
                                 log.warn "No type args found for ${f.name}"
                             }
                         } else {
-                            m.add(f.genericType.actualTypeArguments[0])
+                            if(!m.contains(f.genericType.actualTypeArguments[0])){
+                                m.add(f.genericType.actualTypeArguments[0])
+                            }
                         }
                     } else {
-                        m.add(f.type)
+                        if(!m.contains(f.type)){
+                            m.add(f.type)
+                        }
                     }
 
                 }
             }
         }
+
         models
     }
 
@@ -624,7 +634,9 @@ class SwaggyDataService {
                 && (domain.constraints[propertyName] instanceof ConstrainedProperty)){
             domain.constraints[propertyName].appliedConstraints.each { constraint ->
                 constraintName = Introspector.decapitalize(constraint.class.simpleName - "Constraint")
-                constraintsInfo.constraints << [constraint: "$constraintName", value: constraint.constraintParameter]
+                if(constraintName != "validator"){
+                    constraintsInfo.constraints << [constraint: "$constraintName", value: constraint.constraintParameter]
+                }
             }
         }
 
